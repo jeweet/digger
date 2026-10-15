@@ -4,6 +4,7 @@ from logging.handlers import RotatingFileHandler
 import json
 import logging
 import os
+import threading
 
 from gi.repository import Adw, Gio
 
@@ -67,42 +68,63 @@ def _secret_attrs(url, user):
     return {"server": url.rstrip("/"), "username": user}
 
 
+KEYRING_TIMEOUT = 8      # seconds; a missing or locked keyring must not hang the app
+
+
+def _cancel_after(seconds):
+    """A Gio.Cancellable that cancels itself, so a blocked keyring call gives up."""
+    cancellable = Gio.Cancellable()
+    timer = threading.Timer(seconds, cancellable.cancel)
+    timer.daemon = True
+    timer.start()
+    return cancellable, timer
+
+
 def store_password(cfg, url, user, pw):
     """Keyring if available, otherwise the (0600) config file."""
     if Secret:
+        cancellable, timer = _cancel_after(KEYRING_TIMEOUT)
         try:
             if Secret.password_store_sync(
                     SECRET_SCHEMA, _secret_attrs(url, user),
                     Secret.COLLECTION_DEFAULT, f"Digger: {user} @ {url}",
-                    pw, None):
+                    pw, cancellable):
                 cfg.pop("password", None)
                 return "keyring"
         except Exception as e:  # noqa: BLE001
             log.warning("Keyring unavailable (%s); using config file", e)
+        finally:
+            timer.cancel()
     cfg["password"] = pw
     return "config file"
 
 
 def load_password(cfg, url, user):
     if Secret:
+        cancellable, timer = _cancel_after(KEYRING_TIMEOUT)
         try:
             pw = Secret.password_lookup_sync(SECRET_SCHEMA,
-                                             _secret_attrs(url, user), None)
+                                             _secret_attrs(url, user), cancellable)
             if pw:
                 return pw
         except Exception as e:  # noqa: BLE001
-            log.debug("Keyring lookup failed: %s", e)
+            log.warning("Keyring lookup failed: %s", e)
+        finally:
+            timer.cancel()
     return cfg.get("password") or None
 
 
 def forget_password(cfg, url, user):
     cfg.pop("password", None)
     if Secret and url and user:
+        cancellable, timer = _cancel_after(KEYRING_TIMEOUT)
         try:
             Secret.password_clear_sync(SECRET_SCHEMA, _secret_attrs(url, user),
-                                       None)
+                                       cancellable)
         except Exception as e:  # noqa: BLE001
             log.debug("Keyring clear failed: %s", e)
+        finally:
+            timer.cancel()
 
 
 def notification_icon():

@@ -19,6 +19,7 @@ modules:
       - cp -r digger /app/share/digger/
       - python3 -m compileall -q /app/share/digger
       - install -Dm755 data/digger /app/bin/digger
+      - chmod 755 /app/bin/digger
       - install -Dm644 data/io.github.jeweet.Digger.desktop /app/share/applications/io.github.jeweet.Digger.desktop
       - install -Dm644 data/io.github.jeweet.Digger.metainfo.xml /app/share/metainfo/io.github.jeweet.Digger.metainfo.xml
       - install -Dm644 io.github.jeweet.Digger.png /app/share/icons/hicolor/512x512/apps/io.github.jeweet.Digger.png

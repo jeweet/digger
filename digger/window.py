@@ -277,17 +277,23 @@ class MainWindow(SettingsMixin, SearchMixin, ChatMixin, EventsMixin, RoomsMixin,
                 self._teardown_session()
             self.api = api
             self.cfg.update(url=url, username=user, stay_signed_in=remember)
-            if not auto:
-                if remember:
-                    log.info("Credentials stored in %s",
-                             store_password(self.cfg, url, user, pw))
-                else:
-                    forget_password(self.cfg, url, user)
             self._save_config()
             self.pass_row.set_text("")
             self.url_row.set_text(url)
             self.user_row.set_text(user)
             self._enter_main(user)
+            if not auto:
+                # the keyring can be slow or missing (sandbox, phone): never block the UI
+                def keep():
+                    if remember:
+                        return store_password(self.cfg, url, user, pw)
+                    forget_password(self.cfg, url, user)
+                    return "forgotten"
+
+                def kept(where):
+                    log.info("Credentials: %s", where)
+                    self._save_config()
+                run_async(keep, kept, lambda e: log.warning("Keyring: %s", e))
 
         def fail(e):
             self.login_btn.set_sensitive(True)
@@ -535,9 +541,11 @@ class MainWindow(SettingsMixin, SearchMixin, ChatMixin, EventsMixin, RoomsMixin,
     def _logout(self, forget=True):
         log.info("Signing out")
         if forget:
-            forget_password(self.cfg, self.cfg.get("url", ""),
-                            self.cfg.get("username", ""))
+            url, user = self.cfg.get("url", ""), self.cfg.get("username", "")
+            self.cfg.pop("password", None)
             self._save_config()
+            run_async(lambda: forget_password(self.cfg, url, user), None,
+                      lambda e: log.warning("Keyring: %s", e))
         self._teardown_session()
         self.stack.set_visible_child_name("login")
 

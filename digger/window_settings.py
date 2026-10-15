@@ -899,15 +899,23 @@ class SettingsMixin:
         def on_save(*_):
             url = url_row.get_text().strip()
             user = user_row.get_text().strip()
-            pw = pw_row.get_text() or load_password(self.cfg, url, user) or ""
+            typed = pw_row.get_text()
             if not url or not user:
                 self.toast("Enter server URL and username")
                 return
-            if not pw:
-                self.toast("Enter a password")
-                return
-            dlg.close()
-            self._do_login(url, user, pw, remember=stay.get_active())
+
+            def proceed(pw):
+                if not pw:
+                    self.toast("Enter a password")
+                    return
+                dlg.close()
+                self._do_login(url, user, pw, remember=stay.get_active())
+
+            if typed:
+                proceed(typed)
+            else:      # reuse the stored one; the keyring can be slow, so not on the UI thread
+                run_async(lambda: load_password(self.cfg, url, user) or "", proceed,
+                          lambda e: self.toast(describe_error(e)))
 
         def on_signout(*_):
             dlg.close()
