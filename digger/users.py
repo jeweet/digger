@@ -42,6 +42,7 @@ class UserDirectory:
         self.status_pending = set()
         self.status_active = 0
         self.textures = {}                   # username -> Gdk.Texture | None
+        self.countries = {}                  # lowercase name -> ISO code (from room data)
 
     def texture(self, username, data):
         """Profile picture from a user-info response (slskd sends it base64 encoded)."""
@@ -64,8 +65,26 @@ class UserDirectory:
             self.textures[username] = tex
         return tex
 
+    def set_country(self, username, code):
+        if isinstance(code, str) and len(code.strip()) == 2 and code.strip().isalpha():
+            self.countries[username.lower()] = code.strip().upper()
+
+    def country(self, username, data=None):
+        """ISO country code if known: from room user lists or the info response."""
+        for key in ("countryCode", "country"):
+            v = (data or {}).get(key)
+            if isinstance(v, str) and len(v.strip()) == 2 and v.strip().isalpha():
+                return v.strip().upper()
+        return self.countries.get(username.lower())
+
+    @staticmethod
+    def country_label(code):
+        flag = "".join(chr(0x1F1E6 + ord(c) - 65) for c in code)
+        return f"{flag} {code}"
+
     def reset(self):
         self.textures.clear()
+        self.countries.clear()
         self.cache.clear()
         self.status_cache.clear()
         self.status_waiters.clear()
@@ -200,6 +219,9 @@ class UserDirectory:
             lines.append("<i>No details available (user may be offline)</i>")
         else:
             lines.extend(esc(line) for line in self.detail_lines(data))
+        code = self.country(username, data)
+        if code:
+            lines.insert(1 if not extra else 2, "Country: " + esc(self.country_label(code)))
         return "\n".join(lines)
 
 

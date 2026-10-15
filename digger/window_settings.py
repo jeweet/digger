@@ -124,6 +124,7 @@ class SettingsMixin:
                   website="https://github.com/slskd/slskd",
                   copyright="© 2026 Digger contributors",
                   license_type=Gtk.License.MIT_X11)
+        kw["issue_url"] = "https://github.com/jeweet/digger/issues"
         if hasattr(Adw, "AboutDialog"):
             Adw.AboutDialog(**kw).present(self)
         else:

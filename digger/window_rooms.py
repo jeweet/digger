@@ -461,6 +461,7 @@ class RoomsMixin:
             if isinstance(u, dict) and u.get("username"):
                 presence = normalize_presence(u.get("status"))
                 seen[u["username"]] = presence
+                self.user_dir.set_country(u["username"], u.get("countryCode") or u.get("country"))
                 if presence:
                     self.user_dir.set_status(u["username"], presence)
         sig = (self.room_cur, tuple((n, seen.get(n, "")) for n in names))
