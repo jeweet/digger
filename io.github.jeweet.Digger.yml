@@ -1,0 +1,32 @@
+app-id: io.github.jeweet.Digger
+runtime: org.gnome.Platform
+runtime-version: '50'          # use the newest GNOME runtime when you build
+sdk: org.gnome.Sdk
+command: digger
+
+finish-args:
+  - --share=network            # reaches your slskd server, also on localhost
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+
+modules:
+  - name: digger
+    buildsystem: simple
+    build-commands:
+      - install -d /app/share/digger
+      - cp -r digger /app/share/digger/
+      - python3 -m compileall -q /app/share/digger
+      - install -Dm755 data/digger /app/bin/digger
+      - install -Dm644 data/io.github.jeweet.Digger.desktop /app/share/applications/io.github.jeweet.Digger.desktop
+      - install -Dm644 data/io.github.jeweet.Digger.metainfo.xml /app/share/metainfo/io.github.jeweet.Digger.metainfo.xml
+      - install -Dm644 io.github.jeweet.Digger.png /app/share/icons/hicolor/512x512/apps/io.github.jeweet.Digger.png
+    sources:
+      - type: dir
+        path: .
+        skip:
+          - tests
+          - .git
+          - build-dir
+          - .flatpak-builder

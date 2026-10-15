@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Digger
+GenericName=Soulseek Client
+Comment=Search, download and share music through your slskd server
+Exec=digger
+Icon=io.github.jeweet.Digger
+Terminal=false
+StartupNotify=true
+Categories=Network;FileTransfer;P2P;GTK;
+Keywords=soulseek;slskd;music;p2p;search;download;share;chat;

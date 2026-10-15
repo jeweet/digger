@@ -1,0 +1,22 @@
+# Flatpak build output
+build-dir/
+builddir/
+.flatpak-builder/
+repo/
+*.flatpak
+*.flatpakref
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+build/
+dist/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store

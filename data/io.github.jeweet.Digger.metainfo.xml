@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.jeweet.Digger</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <name>Digger</name>
+  <summary>A client for your slskd Soulseek server</summary>
+  <developer id="io.github.jeweet">
+    <name>Digger contributors</name>
+  </developer>
+  <description>
+    <p>
+      Digger is a GTK 4 desktop and mobile client for slskd, the Soulseek daemon.
+      It connects to the slskd server you already run and lets you search the
+      Soulseek network, browse other users' shares, manage downloads and uploads,
+      and chat in private conversations and rooms.
+    </p>
+    <ul>
+      <li>Search with the same filter syntax as the slskd web interface</li>
+      <li>Browse users' files and download whole folders</li>
+      <li>Follow downloads and uploads, retry or remove them in bulk</li>
+      <li>Private chats and rooms, with notifications for new messages</li>
+      <li>Server settings: options, YAML editor, share rescan, logs and files</li>
+      <li>Adapts to phones and small screens</li>
+    </ul>
+    <p>
+      Digger is an unofficial client and needs a running slskd server. It does not
+      connect to Soulseek by itself.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.jeweet.Digger.desktop</launchable>
+  <provides>
+    <binary>digger</binary>
+  </provides>
+  <categories>
+    <category>Network</category>
+    <category>FileTransfer</category>
+  </categories>
+  <keywords>
+    <keyword>Soulseek</keyword>
+    <keyword>slskd</keyword>
+    <keyword>music</keyword>
+    <keyword>p2p</keyword>
+  </keywords>
+  <url type="bugtracker">https://github.com/jeweet/digger/issues</url>
+  <url type="homepage">https://github.com/jeweet/digger</url>
+  <requires>
+    <display_length compare="ge">360</display_length>
+  </requires>
+  <recommends>
+    <control>keyboard</control>
+    <control>pointing</control>
+    <control>touch</control>
+  </recommends>
+  <content_rating type="oars-1.1">
+    <content_attribute id="social-chat">intense</content_attribute>
+    <content_attribute id="social-info">mild</content_attribute>
+  </content_rating>
+  <!-- Flathub needs at least one screenshot, hosted at a stable public URL:
+  <screenshots>
+    <screenshot type="default">
+      <image>https://example.org/digger-search.png</image>
+      <caption>Search results</caption>
+    </screenshot>
+  </screenshots>
+  -->
+  <releases>
+    <release version="1.0.0" date="2026-10-15">
+      <description>
+        <p>First release.</p>
+      </description>
+    </release>
+  </releases>
+</component>
