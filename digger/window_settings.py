@@ -1,6 +1,8 @@
 """Main window: menu, settings dialogs and server settings."""
 
 import json
+import os
+import platform
 import re
 import urllib.error
 import urllib.parse
@@ -116,6 +118,50 @@ class SettingsMixin:
             self.toast("Alt+1…6 pages · Ctrl+N new search · Ctrl+F filter · "
                        "Ctrl+, settings · Ctrl+Q quit")
 
+    def _debug_info(self):
+        """Plain-text troubleshooting report for the About dialog (no secrets)."""
+        def ver(mod, *names):
+            try:
+                return ".".join(str(getattr(mod, n)()) for n in names)
+            except Exception:  # noqa: BLE001
+                return "?"
+        lines = [
+            f"Digger {VERSION} ({constants.APP_ID})",
+            f"Python {platform.python_version()} on {platform.system()} {platform.release()} "
+            f"({platform.machine()})",
+            f"GTK {ver(Gtk, 'get_major_version', 'get_minor_version', 'get_micro_version')}, "
+            f"libadwaita {ver(Adw, 'get_major_version', 'get_minor_version', 'get_micro_version')}, "
+            f"GLib {GLib.MAJOR_VERSION}.{GLib.MINOR_VERSION}.{GLib.MICRO_VERSION}",
+            "Flatpak: " + ("yes" if os.path.exists("/.flatpak-info") else "no"),
+            "Session: " + (os.environ.get("XDG_SESSION_TYPE") or "?")
+            + " / " + (os.environ.get("XDG_CURRENT_DESKTOP") or "?"),
+            "Keyring (libsecret): " + ("available" if Secret else "not available"),
+            "Password stored in: " + ("config file" if self.cfg.get("password") else "keyring/none"),
+            "Adw.AboutDialog: " + ("yes" if hasattr(Adw, "AboutDialog") else "no (fallback)"),
+        ]
+        url = self.cfg.get("url") or ""
+        m = re.match(r"(https?)://[^/:]*(?::(\d+))?", url)
+        lines.append("Server: " + (f"{m.group(1)}, port {m.group(2) or 'default'} (host hidden)"
+                                    if m else "not set"))
+        lines.append("Connected: " + ("yes" if self.api else "no"))
+        lines.append("Log level: " + str(self.cfg.get("log_level", "INFO")))
+        lines.append("Config: " + constants.CONFIG_PATH)
+        lines.append("Log file: " + LOG_FILE)
+        tail = ""
+        try:
+            with open(LOG_FILE, encoding="utf-8", errors="replace") as f:
+                tail = "".join(f.readlines()[-60:]).rstrip()
+        except OSError:
+            pass
+        lines.append("")
+        lines.append("Last log lines:" if tail else "No log file yet.")
+        if tail:
+            lines.append(tail)
+        lines.append("")
+        lines.append("Review this text before posting it publicly: log lines can "
+                     "contain user names and file names.")
+        return "\n".join(lines)
+
     def _show_about(self, *_):
         kw = dict(application_name="Digger", application_icon=constants.ICON_NAME,
                   developer_name="Digger contributors", version=VERSION,
@@ -125,6 +171,8 @@ class SettingsMixin:
                   copyright="© 2026 Digger contributors",
                   license_type=Gtk.License.MIT_X11)
         kw["issue_url"] = "https://github.com/jeweet/digger/issues"
+        kw["debug_info"] = self._debug_info()
+        kw["debug_info_filename"] = "digger-debug-info.txt"
         if hasattr(Adw, "AboutDialog"):
             Adw.AboutDialog(**kw).present(self)
         else:
